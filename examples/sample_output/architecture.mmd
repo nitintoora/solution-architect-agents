@@ -1,0 +1,58 @@
+flowchart TD
+    subgraph External Systems
+        WD[Workday HR System]
+        Graph[Microsoft Graph API]
+        SN[ServiceNow API]
+        LMS[External LMS]
+    end
+
+    subgraph Ingestion
+        Poller[Workday Poller Function]
+        SB[Azure Service Bus]
+    end
+
+    subgraph Orchestration
+        Orch[Durable Functions Orchestrator]
+        Provision[Provision Identity Activity]
+        Checklist[Create Checklist Activity]
+        Notify[Notify Stakeholders Activity]
+        FailHandler[Failure Handler Activity]
+        TrainingCheck[Training Monitor Activity]
+    end
+
+    subgraph Data Layer AU
+        SQLAU[Azure SQL - AU East]
+        BlobAU[Audit Logs - AU East]
+    end
+
+    subgraph Data Layer UK
+        SQLUK[Azure SQL - UK South]
+        BlobUK[Audit Logs - UK South]
+    end
+
+    subgraph Presentation
+        FD[Azure Front Door]
+        SPA[React SPA Portal]
+        API[Backend API Functions]
+    end
+
+    WD -->|Poll new hires| Poller
+    Poller -->|Publish event| SB
+    SB -->|Trigger| Orch
+    Orch --> Provision
+    Provision -->|Create user + licenses| Graph
+    Orch --> Checklist
+    Orch --> Notify
+    Notify -->|Email + Teams| Graph
+    Orch --> TrainingCheck
+    TrainingCheck -->|Check completion| LMS
+    Orch --> FailHandler
+    FailHandler -->|Create incident| SN
+    Checklist -->|Write AU data| SQLAU
+    Checklist -->|Write UK data| SQLUK
+    Provision -->|Audit log| BlobAU
+    Provision -->|Audit log| BlobUK
+    FD --> SPA
+    SPA --> API
+    API -->|Read AU data| SQLAU
+    API -->|Read UK data| SQLUK

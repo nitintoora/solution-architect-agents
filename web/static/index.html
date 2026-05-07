@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solution Architect</title>
+  <link rel="stylesheet" href="/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    window.mermaid = mermaid;
+    mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+  </script>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ INPUT VIEW ══════════════════════════════ -->
+<div id="view-input" class="view active">
+  <div class="input-shell">
+    <div class="brand">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="8" fill="#2563EB"/>
+        <path d="M8 22L13 10L16 17L19 13L24 22" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>Solution Architect</span>
+    </div>
+    <h1>Turn requirements into architecture</h1>
+    <p class="subtitle">Describe your business problem and get a complete solution architecture — brief, options, design, decisions, and risks.</p>
+
+    <div class="input-card">
+      <label for="requirements">Business requirements</label>
+      <textarea
+        id="requirements"
+        placeholder="Describe your business problem, constraints, and goals. The more context you provide, the better the output.&#10;&#10;Example: We need to build an internal employee onboarding portal that integrates with Workday, provisions Microsoft 365 accounts, and tracks mandatory training. Target: 500-1000 new hires per year across AU and UK offices..."
+        rows="10"
+      ></textarea>
+      <div class="input-actions">
+        <button id="btn-load-example" class="btn-ghost" onclick="loadExample()">Load example</button>
+        <button id="btn-submit" class="btn-primary" onclick="startRun()">
+          Generate architecture
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ PROGRESS VIEW ════════════════════════════ -->
+<div id="view-progress" class="view">
+  <div class="progress-layout">
+
+    <!-- Left: step list -->
+    <aside class="step-sidebar">
+      <div class="sidebar-header">
+        <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#2563EB"/><path d="M8 22L13 10L16 17L19 13L24 22" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Solution Architect</span>
+      </div>
+      <ul id="step-list" class="step-list"></ul>
+    </aside>
+
+    <!-- Right: checkpoint panel or idle state -->
+    <main class="progress-main">
+      <div id="panel-idle" class="idle-panel">
+        <div class="spinner-lg"></div>
+        <p>Running pipeline…</p>
+      </div>
+
+      <!-- Brief review panel -->
+      <div id="panel-brief" class="checkpoint-panel hidden">
+        <div class="checkpoint-header">
+          <span class="checkpoint-badge">Review 1 of 2</span>
+          <h2>Business Brief</h2>
+          <p>The AI has analysed your requirements and produced a business brief. Review it below — you can edit it before continuing.</p>
+        </div>
+        <textarea id="brief-text" class="review-textarea" rows="18"></textarea>
+        <div class="checkpoint-actions">
+          <button class="btn-ghost" onclick="approveBrief(false)">Approve as-is</button>
+          <button class="btn-primary" onclick="approveBrief(true)">
+            Save changes &amp; continue
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Approaches review panel -->
+      <div id="panel-approaches" class="checkpoint-panel hidden">
+        <div class="checkpoint-header">
+          <span class="checkpoint-badge">Review 2 of 2</span>
+          <h2>Candidate Approaches</h2>
+          <p>The AI has identified these solution options. Select a preferred approach or let the architect decide.</p>
+        </div>
+        <div id="approaches-list" class="approaches-list"></div>
+        <div class="checkpoint-actions">
+          <button class="btn-ghost" onclick="submitApproach(null)">Let architect decide</button>
+          <button class="btn-primary" onclick="submitSelectedApproach()">
+            Use selected approach
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ RESULTS VIEW ════════════════════════════ -->
+<div id="view-results" class="view">
+  <div class="results-layout">
+    <header class="results-header">
+      <div class="brand">
+        <svg width="24" height="24" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#2563EB"/><path d="M8 22L13 10L16 17L19 13L24 22" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Solution Architect</span>
+      </div>
+      <button class="btn-ghost" onclick="startOver()">← New run</button>
+    </header>
+
+    <div class="tab-bar">
+      <button class="tab active" data-tab="solution">Solution Design</button>
+      <button class="tab" data-tab="diagram">Architecture Diagram</button>
+      <button class="tab" data-tab="decisions">Decisions</button>
+      <button class="tab" data-tab="risks">Risks</button>
+      <button class="tab" data-tab="downloads">Downloads</button>
+    </div>
+
+    <div class="tab-content">
+      <div id="tab-solution" class="tab-pane active prose"></div>
+      <div id="tab-diagram" class="tab-pane">
+        <div id="mermaid-container" class="mermaid-container"></div>
+      </div>
+      <div id="tab-decisions" class="tab-pane prose"></div>
+      <div id="tab-risks" class="tab-pane prose"></div>
+      <div id="tab-downloads" class="tab-pane">
+        <div class="download-grid" id="download-grid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═════════════════════════════════ ERROR BAR ═════════════════════════════ -->
+<div id="error-bar" class="error-bar hidden">
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="8" stroke="#dc2626" stroke-width="1.6"/><path d="M9 5v4M9 12v.5" stroke="#dc2626" stroke-width="1.8" stroke-linecap="round"/></svg>
+  <span id="error-message"></span>
+  <button onclick="document.getElementById('error-bar').classList.add('hidden')">✕</button>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>
