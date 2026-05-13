@@ -24,7 +24,7 @@ Open a GitHub issue with:
 - What actually happened (output or error)
 
 ### Fix a bug or add a feature
-1. Fork the repo and create a branch from `main`
+1. Fork the repo and create a branch from `master`
 2. Make your change
 3. Run the tests: `pytest tests/`
 4. Open a PR with a clear description of what changed and why
@@ -32,7 +32,7 @@ Open a GitHub issue with:
 ## Development setup
 
 ```bash
-git clone https://github.com/your-org/solution-architect-agents
+git clone https://github.com/nitintoora/solution-architect-agents
 cd solution-architect-agents
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
