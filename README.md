@@ -2,19 +2,24 @@
 
 > A multi-agent system that turns business requirements into a complete solution architecture deliverable.
 
-![Solution Architect UI](examples/screenshot.png)
-<!-- Replace examples/screenshot.png with an actual screenshot or demo GIF -->
+![Solution Architect UI — progress view](docs/assets/03-progress-view.png)
+
+## Why I built this
+
+I'm a solution architect. I kept finding myself running the same first-pass workflow: read the requirements, draft a brief, sketch out options, write the architecture doc, review it, polish it. This automates that first pass so I can focus on the parts that actually need an architect's brain.
 
 ## What this is
 
-`solution-architect-agents` runs a linear chain of 7 specialised LLM agents (powered by Claude) to transform raw business requirements into a full solution design package: business brief, options analysis, architecture diagram, decision records, risk register, and a polished final document — all in markdown, ready to commit or share.
+`solution-architect-agents` runs a chain of 7 specialised LLM agents (powered by Claude) to transform raw business requirements into a full solution design package: business brief, options analysis, architecture diagram, decision records, risk register, and a polished final document — all in markdown, ready to commit or share.
 
 Built with [LangGraph](https://github.com/langchain-ai/langgraph) and the [Anthropic Python SDK](https://github.com/anthropics/anthropic-sdk-python). Includes a web UI and a CLI. No database, no vector store.
+
+**Cloud and technology agnostic.** The agents follow the requirements you give them. If your brief mentions AWS, the output will be AWS. GCP, on-prem, hybrid — the agents will work with whatever constraints and preferences you specify. The sample output in this repo is Azure because the sample input says "we have an existing Azure tenancy."
 
 ## Quick start
 
 ```bash
-git clone https://github.com/your-org/solution-architect-agents
+git clone https://github.com/nitintoora/solution-architect-agents
 cd solution-architect-agents
 pip install -r requirements.txt
 cp .env.example .env        # add your ANTHROPIC_API_KEY
@@ -29,29 +34,11 @@ python main.py --input path/to/your/requirements.md --output ./output
 
 ### Web UI
 
-Prefer a browser-based interface with live progress tracking? Start the web server instead:
-
 ```bash
 uvicorn web.server:app --reload
 ```
 
-Then open [http://localhost:8000](http://localhost:8000). The UI shows each agent step in real time and supports human-in-the-loop review of the business brief and candidate approaches before the pipeline continues.
-
-## Example output
-
-See [`examples/sample_output/`](examples/sample_output/) for a complete run on the bundled [sample input](examples/sample_input.md) (an internal employee onboarding portal).
-
-The key files:
-
-| File | What it is |
-|------|-----------|
-| `solution_design.md` | Final polished solution design document |
-| `architecture.mmd` | Mermaid diagram source (renders on GitHub) |
-| `decisions.md` | Architecture Decision Records (ADR format) |
-| `risks.md` | Risk register table |
-| `business_brief.md` | Structured brief produced from the raw requirements |
-| `options_considered.md` | Full write-up of the architectural options evaluated |
-| `review_notes.md` | The doc reviewer's feedback (kept for transparency) |
+Open [http://localhost:8000](http://localhost:8000). The UI shows each agent step in real time and includes human-in-the-loop review points — you can inspect and edit the business brief and candidate approaches before the pipeline continues.
 
 ## How it works
 
@@ -67,9 +54,7 @@ flowchart TD
     H -->|final_doc| I[output/]
 ```
 
-Each agent reads relevant fields from the shared state, calls Claude with a specialised prompt, and writes its outputs back to state. No branching, no loops — a clean linear pipeline.
-
-**Agents:**
+Each agent reads from shared state, calls Claude with a specialised prompt, and writes its outputs back. No branching, no loops — a clean linear pipeline.
 
 | # | Agent | Input | Output |
 |---|-------|-------|--------|
@@ -80,6 +65,20 @@ Each agent reads relevant fields from the shared state, calls Claude with a spec
 | 5 | `doc_writer` | everything above | full draft solution design document |
 | 6 | `doc_reviewer` | brief + draft doc | structured critique |
 | 7 | `editor` | draft doc + critique | final polished document |
+
+## Example output
+
+See [`examples/sample_output/`](examples/sample_output/) for a complete run on the bundled [sample input](examples/sample_input.md) — an internal employee onboarding portal for a company with an existing Azure tenancy. That constraint in the input is why the output is Azure-based.
+
+| File | What it is |
+|------|-----------|
+| `solution_design.md` | Final polished solution design document |
+| `architecture.mmd` | Mermaid diagram source (renders on GitHub) |
+| `decisions.md` | Architecture Decision Records (ADR format) |
+| `risks.md` | Risk register table |
+| `business_brief.md` | Structured brief produced from the raw requirements |
+| `options_considered.md` | Full write-up of the architectural options evaluated |
+| `review_notes.md` | The doc reviewer's feedback (kept for transparency) |
 
 ## Customising prompts
 
@@ -98,26 +97,25 @@ src/prompts/
 
 Each file defines the agent's role, output format, and constraints. The prompts are the primary lever for improving output quality — better prompts produce better documents.
 
-The model and API key are controlled by environment variables (see `.env.example`):
+The model and API key are set via environment variables (see `.env.example`):
 
 ```
 ANTHROPIC_API_KEY=your_key_here
 ANTHROPIC_MODEL=claude-opus-4-6
 ```
 
-## Limitations (v1)
+## Limitations
 
-- **Anthropic/Claude only** — no multi-provider support
+- **Anthropic/Claude only** — no multi-provider support yet
 - **No branching or loops** — if the architect's output is weak, the doc will reflect that; re-run manually
 - **No RAG** — agents have no access to your org's existing architecture docs or patterns
 - **No PDF/Word export** — markdown output only
 - **`output/` is not committed** — intentional; generate your own or use `examples/sample_output/` as a reference
 
-## Roadmap (v2)
+## Roadmap
 
 - **Requirements validation agent** — pre-flight check that flags ambiguous or incomplete requirements before the pipeline starts
 - **Multi-provider LLM support** — OpenAI, Gemini, local models via LiteLLM
-- **Human-in-the-loop checkpoints** — pause after the architect and solutioning agents for review before continuing
 - **Iterative refinement** — allow the editor to loop back to the doc_writer if the review finds critical gaps
 - **PDF/Word export** — via Pandoc
 - **RAG over org patterns** — ingest your existing architecture docs to ground the agents' recommendations
@@ -139,12 +137,7 @@ pip install pytest pytest-mock
 pytest tests/
 ```
 
-Tests mock the Claude API — no credits consumed.
-
-**PR guidelines:**
-- Keep PRs focused — one change per PR
-- Include a short description of what changed and why
-- If you change a prompt, include example output showing the improvement
+Tests mock the Claude API — no credits consumed. Keep PRs focused and include a short description of what changed and why. If you change a prompt, include example output showing the improvement.
 
 ## License
 
