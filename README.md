@@ -2,7 +2,7 @@
 
 > A multi-agent system that turns business requirements into a complete solution architecture deliverable.
 
-![Solution Architect UI — progress view](docs/assets/03-progress-view.png)
+![Solution Architect UI — demo](docs/assets/demo.gif)
 
 ## Why I built this
 
