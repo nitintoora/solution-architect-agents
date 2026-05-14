@@ -43,6 +43,11 @@ No Node.js, no Docker, no database required.
 ```bash
 git clone https://github.com/nitintoora/solution-architect-agents
 cd solution-architect-agents
+
+# optional but recommended: create an isolated virtual environment
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+
 pip install -r requirements.txt
 cp .env.example .env        # add your ANTHROPIC_API_KEY
 python main.py --input examples/sample_input.md
@@ -67,26 +72,32 @@ Open [http://localhost:8000](http://localhost:8000). The UI shows each agent ste
 ```mermaid
 flowchart TD
     A[requirements_input] --> B[business_analyst]
-    B -->|business_brief| C[solutioning]
-    C -->|candidate_approaches| D[architect]
-    D -->|architecture + diagram + decisions| E[risk_reviewer]
-    E -->|risks| F[doc_writer]
-    F -->|draft_doc| G[doc_reviewer]
-    G -->|review_feedback| H[editor]
-    H -->|final_doc| I[output/]
+    B -->|business_brief| C{review_brief\ncheckpoint 1}
+    C -->|approved / amended| D[solutioning]
+    D -->|candidate_approaches| E{review_approaches\ncheckpoint 2}
+    E -->|preferred approach| F[architect]
+    F -->|architecture + diagram + decisions| G[risk_reviewer]
+    G -->|risks| H[doc_writer]
+    H -->|draft_doc| I[doc_reviewer]
+    I -->|review_feedback| J[editor]
+    J -->|final_doc| K[output/]
 ```
 
-Each agent reads from shared state, calls Claude with a specialised prompt, and writes its outputs back. No branching, no loops — a clean linear pipeline.
+Each agent reads from shared state, calls Claude with a specialised prompt, and writes its outputs back. No branching, no loops — a clean linear pipeline with two optional human-in-the-loop checkpoints spliced in.
 
-| # | Agent | Input | Output |
-|---|-------|-------|--------|
-| 1 | `business_analyst` | raw requirements | structured business brief |
-| 2 | `solutioning` | business brief | 2-3 distinct architectural approaches |
-| 3 | `architect` | brief + approaches | chosen approach, architecture description, Mermaid diagram, decisions |
-| 4 | `risk_reviewer` | brief + architecture | risk register (5-10 risks) |
-| 5 | `doc_writer` | everything above | full draft solution design document |
-| 6 | `doc_reviewer` | brief + draft doc | structured critique |
-| 7 | `editor` | draft doc + critique | final polished document |
+**Human-in-the-loop checkpoints** are active when you pass `--interactive` on the CLI, or automatically in the web UI. In non-interactive CLI mode they are no-ops and the pipeline runs end-to-end unattended.
+
+| # | Step | Type | What happens |
+|---|------|------|--------------|
+| 1 | `business_analyst` | agent | Parses raw requirements into a structured business brief |
+| — | `review_brief` | **HITL checkpoint** | You can approve the brief or add clarifications; any notes are appended and carried forward |
+| 2 | `solutioning` | agent | Generates 2-3 distinct architectural approaches |
+| — | `review_approaches` | **HITL checkpoint** | You can pick a preferred approach or press Enter to let the architect decide |
+| 3 | `architect` | agent | Designs the chosen approach: architecture description, Mermaid diagram, ADRs |
+| 4 | `risk_reviewer` | agent | Produces a risk register (5-10 risks with mitigations) |
+| 5 | `doc_writer` | agent | Composes a full draft solution design document |
+| 6 | `doc_reviewer` | agent | Produces a structured critique of the draft |
+| 7 | `editor` | agent | Polishes the document based on the critique |
 
 ## Example output
 
