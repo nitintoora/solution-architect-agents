@@ -16,6 +16,28 @@ Built with [LangGraph](https://github.com/langchain-ai/langgraph) and the [Anthr
 
 **Cloud and technology agnostic.** The agents follow the requirements you give them. If your brief mentions AWS, the output will be AWS. GCP, on-prem, hybrid — the agents will work with whatever constraints and preferences you specify. The sample output in this repo is Azure because the sample input says "we have an existing Azure tenancy."
 
+## Prerequisites
+
+| Requirement | Version | How to get it |
+|-------------|---------|---------------|
+| Python | ≥ 3.11 | [python.org/downloads](https://www.python.org/downloads/) — pick the latest 3.11+ installer for your OS |
+| Anthropic API key | — | [console.anthropic.com](https://console.anthropic.com) → create an account → API keys → New key |
+| pip | bundled with Python | comes with Python; upgrade with `pip install --upgrade pip` if needed |
+
+### Python packages (installed automatically)
+
+`pip install -r requirements.txt` installs:
+
+| Package | Purpose |
+|---------|---------|
+| `anthropic` | Claude API SDK |
+| `langgraph` | Agent orchestration graph |
+| `pydantic` | State validation |
+| `python-dotenv` | Loads `.env` into environment |
+| `fastapi` + `uvicorn` | Web UI server |
+
+No Node.js, no Docker, no database required.
+
 ## Quick start
 
 ```bash
