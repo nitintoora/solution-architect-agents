@@ -23,6 +23,7 @@ Built with [LangGraph](https://github.com/langchain-ai/langgraph) and the [Anthr
 | Python | ≥ 3.11 | [python.org/downloads](https://www.python.org/downloads/) — pick the latest 3.11+ installer for your OS |
 | Anthropic API key | — | [console.anthropic.com](https://console.anthropic.com) → create an account → API keys → New key |
 | pip | bundled with Python | comes with Python; upgrade with `pip install --upgrade pip` if needed |
+| venv | bundled with Python | optional but recommended — `python -m venv .venv` then `source .venv/bin/activate` (Windows: `.venv\Scripts\activate`) |
 
 ### Python packages (installed automatically)
 
