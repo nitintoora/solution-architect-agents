@@ -336,6 +336,156 @@ textarea:focus { outline: none; border-color: var(--blue); background: #fff; }
   border-radius: 50%; animation: spin .7s linear infinite; display: inline-block;
 }
 
+/* ── Conversational refinement chat ──────────────────────────────────────── */
+.refine-divider {
+  display: flex; align-items: center; gap: 10px;
+  margin: 20px 0 8px;
+  color: var(--gray-400); font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 0.07em; text-transform: uppercase;
+}
+.refine-divider::before,
+.refine-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--gray-200);
+}
+.chat-log {
+  max-height: 220px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 8px;
+  margin-bottom: 12px;
+  padding: 4px 2px;
+}
+.chat-log:empty { display: none; }
+.chat-message {
+  font-size: 14px; line-height: 1.5; padding: 10px 14px;
+  border-radius: 10px; max-width: 88%; word-break: break-word;
+}
+.chat-user {
+  background: var(--blue-light); color: var(--blue-dark);
+  align-self: flex-end; border-bottom-right-radius: 3px;
+}
+.chat-assistant {
+  background: var(--gray-100); color: var(--gray-700);
+  align-self: flex-start; border-bottom-left-radius: 3px;
+}
+.chat-input-row {
+  display: flex; flex-direction: column; gap: 0; margin-bottom: 16px;
+  border: 1.5px solid var(--gray-200); border-radius: 12px;
+  background: #fff; overflow: hidden;
+  transition: border-color .15s, box-shadow .15s;
+}
+.chat-input-row:focus-within {
+  border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+}
+.chat-input {
+  width: 100%; box-sizing: border-box;
+  border: none; border-radius: 0; resize: none;
+  padding: 14px 16px; font-size: 14px; font-family: inherit; line-height: 1.5;
+  color: var(--gray-800); background: transparent;
+  outline: none;
+}
+.chat-input::placeholder { color: var(--gray-400); }
+.chat-input:disabled { background: var(--gray-50); cursor: not-allowed; }
+.chat-send {
+  align-self: flex-end; margin: 0 10px 10px 0;
+  border-radius: 8px; border: none;
+  padding: 8px 18px; font-size: 13px; font-weight: 600;
+  display: flex; align-items: center; gap: 6px;
+  background: var(--blue); color: #fff;
+  cursor: pointer; transition: background .15s;
+}
+.chat-send:hover:not(:disabled) { background: #1d4ed8; }
+.chat-send:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── Clarification Q&A ────────────────────────────────────────────────────── */
+.clarification-area {
+  margin-top: 20px; border-top: 1px solid var(--gray-200);
+  padding-top: 20px;
+}
+.clarification-header {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; font-weight: 600; color: var(--blue);
+  margin-bottom: 16px;
+}
+.clarification-hint {
+  font-size: 12px; font-weight: 400; color: var(--gray-400); margin-left: 4px;
+}
+.question-card { margin-bottom: 14px; }
+.question-label {
+  display: block; font-size: 13px; font-weight: 500;
+  color: var(--gray-700); margin-bottom: 6px; line-height: 1.4;
+}
+.question-input {
+  width: 100%; border: 1px solid var(--gray-200); border-radius: 8px;
+  padding: 9px 13px; font-size: 14px; font-family: inherit;
+  color: var(--gray-800); background: #fff; transition: border-color .15s, box-shadow .15s;
+}
+.question-input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+.question-input::placeholder { color: var(--gray-400); }
+.clarification-actions {
+  display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;
+}
+
+/* ── Checkpoint navigation (back / forward) ───────────────────────────────── */
+.checkpoint-nav {
+  display: flex; gap: 8px; margin-bottom: 16px;
+}
+.checkpoint-nav button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ── Read-only agent output display ──────────────────────────────────────── */
+.output-readonly {
+  background: var(--gray-50); border: 1px solid var(--gray-200);
+  border-radius: 8px; padding: 16px; font-size: 13px; line-height: 1.6;
+  white-space: pre-wrap; word-break: break-word;
+  max-height: 360px; overflow-y: auto; margin-bottom: 20px;
+  font-family: inherit; color: var(--gray-700);
+}
+
+/* ── Feedback textarea (smaller than review-textarea) ────────────────────── */
+.feedback-label {
+  display: block; font-size: 13px; font-weight: 500;
+  color: var(--gray-600); margin-bottom: 6px;
+}
+.feedback-textarea {
+  width: 100%; border: 1px solid var(--gray-200); border-radius: 8px;
+  padding: 10px 14px; font-size: 14px; line-height: 1.5; resize: vertical;
+  font-family: inherit; color: var(--gray-800); background: #fff;
+  margin-bottom: 20px; box-sizing: border-box;
+}
+.feedback-textarea:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+.feedback-textarea:disabled { background: var(--gray-50); color: var(--gray-400); cursor: not-allowed; }
+
+/* ── Decision items (architect checkpoint) ───────────────────────────────── */
+.output-section-title { font-size: 14px; font-weight: 600; color: var(--gray-600); margin: 0 0 8px; }
+.decisions-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.decision-item {
+  background: var(--gray-50); border: 1px solid var(--gray-200);
+  border-radius: 8px; padding: 12px 14px; font-size: 13px;
+}
+.decision-item strong { display: block; margin-bottom: 4px; color: var(--gray-800); }
+.decision-meta { color: var(--gray-500); margin-top: 2px; }
+
+/* ── Risk items (risks checkpoint) ──────────────────────────────────────── */
+.risks-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.risk-item {
+  display: flex; gap: 12px; background: var(--gray-50);
+  border: 1px solid var(--gray-200); border-radius: 8px; padding: 12px 14px;
+}
+.risk-index {
+  flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--blue); color: #fff; font-size: 12px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+}
+.risk-body { flex: 1; font-size: 13px; }
+.risk-desc { font-weight: 500; color: var(--gray-800); margin-bottom: 6px; }
+.risk-meta { display: flex; gap: 8px; margin-bottom: 6px; }
+.badge {
+  font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 99px;
+  background: var(--gray-200); color: var(--gray-600); text-transform: capitalize;
+}
+.badge.likelihood-high, .badge.impact-high { background: #fee2e2; color: #991b1b; }
+.badge.likelihood-medium, .badge.impact-medium { background: #fef3c7; color: #92400e; }
+.badge.likelihood-low, .badge.impact-low { background: #d1fae5; color: #065f46; }
+.risk-mitigation { color: var(--gray-600); font-size: 12px; }
+
 /* ── Utilities ────────────────────────────────────────────────────────────── */
 .hidden { display: none !important; }
 

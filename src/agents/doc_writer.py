@@ -44,6 +44,9 @@ def doc_writer(state: ArchitectureState) -> dict:
         f"## Risks\n\n{risks_text}"
     )
 
+    if state.human_risk_feedback:
+        user_message += f"\n\n---\n\n**User notes on risks:**\n{state.human_risk_feedback}"
+
     response = llm.call_claude(
         system_prompt, user_message,
         model="claude-sonnet-4-6",

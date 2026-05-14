@@ -36,11 +36,29 @@
       ></textarea>
       <div class="input-actions">
         <button id="btn-load-example" class="btn-ghost" onclick="loadExample()">Load example</button>
-        <button id="btn-submit" class="btn-primary" onclick="startRun()">
-          Generate architecture
+        <button id="btn-analyse" class="btn-primary" onclick="analyseRequirements()">
+          Analyse requirements
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
       </div>
+
+      <!-- Clarification Q&A — shown after analysis -->
+      <div id="clarification-area" class="clarification-area hidden">
+        <div class="clarification-header">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#2563EB" stroke-width="1.6"/><path d="M8 5v.5M8 8v3" stroke="#2563EB" stroke-width="1.8" stroke-linecap="round"/></svg>
+          A few quick questions to sharpen the output
+          <span class="clarification-hint">All answers are optional — leave blank to skip</span>
+        </div>
+        <div id="questions-list"></div>
+        <div class="clarification-actions">
+          <button class="btn-ghost" onclick="startRun(false)">Skip, generate directly</button>
+          <button id="btn-submit" class="btn-primary" onclick="startRun(true)">
+            Generate
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -58,22 +76,31 @@
       <ul id="step-list" class="step-list"></ul>
     </aside>
 
-    <!-- Right: checkpoint panel or idle state -->
+    <!-- Right: checkpoint panels -->
     <main class="progress-main">
+
+      <!-- Idle / running -->
       <div id="panel-idle" class="idle-panel">
         <div class="spinner-lg"></div>
         <p>Running pipeline…</p>
       </div>
 
-      <!-- Brief review panel -->
+      <!-- ── Checkpoint 1/7: Business Brief ── -->
       <div id="panel-brief" class="checkpoint-panel hidden">
         <div class="checkpoint-header">
-          <span class="checkpoint-badge">Review 1 of 2</span>
+          <span class="checkpoint-badge">Review 1 of 7</span>
           <h2>Business Brief</h2>
           <p>The AI has analysed your requirements and produced a business brief. Review it below — you can edit it before continuing.</p>
         </div>
-        <textarea id="brief-text" class="review-textarea" rows="18"></textarea>
-        <div class="checkpoint-actions">
+        <div id="brief-nav" class="checkpoint-nav"></div>
+        <textarea id="brief-text" class="review-textarea" rows="14"></textarea>
+        <div class="refine-divider"><span>Refine with AI</span></div>
+        <div class="chat-log" id="brief-chat-log"></div>
+        <div class="chat-input-row">
+          <textarea id="brief-chat-input" class="chat-input" rows="3" placeholder="Ask for a change… e.g. 'add a section on compliance'&#10;(Enter to send, Shift+Enter for new line)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendRefinement('brief')}"></textarea>
+          <button class="chat-send" onclick="sendRefinement('brief')"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 8L2 2l3 6-3 6 12-6z" fill="currentColor"/></svg> Send</button>
+        </div>
+        <div id="brief-submit-actions" class="checkpoint-actions">
           <button class="btn-ghost" onclick="approveBrief(false)">Approve as-is</button>
           <button class="btn-primary" onclick="approveBrief(true)">
             Save changes &amp; continue
@@ -82,18 +109,154 @@
         </div>
       </div>
 
-      <!-- Approaches review panel -->
+      <!-- ── Checkpoint 2/7: Candidate Approaches ── -->
       <div id="panel-approaches" class="checkpoint-panel hidden">
         <div class="checkpoint-header">
-          <span class="checkpoint-badge">Review 2 of 2</span>
+          <span class="checkpoint-badge">Review 2 of 7</span>
           <h2>Candidate Approaches</h2>
           <p>The AI has identified these solution options. Select a preferred approach or let the architect decide.</p>
         </div>
+        <div id="approaches-nav" class="checkpoint-nav"></div>
         <div id="approaches-list" class="approaches-list"></div>
-        <div class="checkpoint-actions">
+        <div class="refine-divider"><span>Notes &amp; Questions</span></div>
+        <div class="chat-log" id="approaches-chat-log"></div>
+        <div class="chat-input-row">
+          <textarea id="approaches-chat-input" class="chat-input" rows="3" placeholder="Ask a question about the approaches… your notes will be carried forward&#10;(Enter to send, Shift+Enter for new line)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendRefinement('approaches')}"></textarea>
+          <button class="chat-send" onclick="sendRefinement('approaches')"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 8L2 2l3 6-3 6 12-6z" fill="currentColor"/></svg> Send</button>
+        </div>
+        <div id="approaches-submit-actions" class="checkpoint-actions">
           <button class="btn-ghost" onclick="submitApproach(null)">Let architect decide</button>
           <button class="btn-primary" onclick="submitSelectedApproach()">
             Use selected approach
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Checkpoint 3/7: Architecture & Decisions ── -->
+      <div id="panel-architect" class="checkpoint-panel hidden">
+        <div class="checkpoint-header">
+          <span class="checkpoint-badge">Review 3 of 7</span>
+          <h2>Architecture &amp; Decisions</h2>
+          <p>Review the proposed architecture and decision records. Add any notes to guide the risk reviewer.</p>
+        </div>
+        <div id="architect-nav" class="checkpoint-nav"></div>
+        <h3 class="output-section-title">Architecture</h3>
+        <pre id="architect-architecture" class="output-readonly"></pre>
+        <h3 class="output-section-title">Architecture Decision Records</h3>
+        <div id="architect-decisions" class="decisions-list"></div>
+        <div class="refine-divider"><span>Refine with AI</span></div>
+        <div class="chat-log" id="architect-chat-log"></div>
+        <div class="chat-input-row">
+          <textarea id="architect-chat-input" class="chat-input" rows="3" placeholder="Ask for a change… e.g. 'add a caching layer to the design'&#10;(Enter to send, Shift+Enter for new line)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendRefinement('architect')}"></textarea>
+          <button class="chat-send" onclick="sendRefinement('architect')"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 8L2 2l3 6-3 6 12-6z" fill="currentColor"/></svg> Send</button>
+        </div>
+        <label class="feedback-label" for="architect-feedback">Notes for the risk reviewer (optional)</label>
+        <textarea id="architect-feedback" class="feedback-textarea" rows="3" placeholder="e.g. Consider the latency impact on the AU region…"></textarea>
+        <div id="architect-submit-actions" class="checkpoint-actions">
+          <button class="btn-ghost" onclick="submitArchitectFeedback()">Continue without notes</button>
+          <button class="btn-primary" onclick="submitArchitectFeedback()">
+            Save notes &amp; continue
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Checkpoint 4/7: Risk Register ── -->
+      <div id="panel-risks" class="checkpoint-panel hidden">
+        <div class="checkpoint-header">
+          <span class="checkpoint-badge">Review 4 of 7</span>
+          <h2>Risk Register</h2>
+          <p>Review the identified risks. Add any additional risks or notes to guide the document writer.</p>
+        </div>
+        <div id="risks-nav" class="checkpoint-nav"></div>
+        <div id="risks-list" class="risks-list"></div>
+        <div class="refine-divider"><span>Refine with AI</span></div>
+        <div class="chat-log" id="risks-chat-log"></div>
+        <div class="chat-input-row">
+          <textarea id="risks-chat-input" class="chat-input" rows="3" placeholder="Ask for a change… e.g. 'add a vendor lock-in risk'&#10;(Enter to send, Shift+Enter for new line)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendRefinement('risks')}"></textarea>
+          <button class="chat-send" onclick="sendRefinement('risks')"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 8L2 2l3 6-3 6 12-6z" fill="currentColor"/></svg> Send</button>
+        </div>
+        <label class="feedback-label" for="risks-feedback">Notes for the doc writer (optional)</label>
+        <textarea id="risks-feedback" class="feedback-textarea" rows="3" placeholder="e.g. Also consider GDPR data retention risks…"></textarea>
+        <div id="risks-submit-actions" class="checkpoint-actions">
+          <button class="btn-ghost" onclick="submitRisksFeedback()">Continue without notes</button>
+          <button class="btn-primary" onclick="submitRisksFeedback()">
+            Save notes &amp; continue
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Checkpoint 5/7: Draft Document ── -->
+      <div id="panel-draft" class="checkpoint-panel hidden">
+        <div class="checkpoint-header">
+          <span class="checkpoint-badge">Review 5 of 7</span>
+          <h2>Draft Document</h2>
+          <p>The AI has written a draft solution design document. You can edit it directly before the doc reviewer picks it up.</p>
+        </div>
+        <div id="draft-nav" class="checkpoint-nav"></div>
+        <textarea id="draft-text" class="review-textarea" rows="18"></textarea>
+        <div class="refine-divider"><span>Refine with AI</span></div>
+        <div class="chat-log" id="draft-chat-log"></div>
+        <div class="chat-input-row">
+          <textarea id="draft-chat-input" class="chat-input" rows="3" placeholder="Ask for a change… e.g. 'shorten the executive summary'&#10;(Enter to send, Shift+Enter for new line)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendRefinement('draft')}"></textarea>
+          <button class="chat-send" onclick="sendRefinement('draft')"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 8L2 2l3 6-3 6 12-6z" fill="currentColor"/></svg> Send</button>
+        </div>
+        <div id="draft-submit-actions" class="checkpoint-actions">
+          <button class="btn-ghost" onclick="submitDraft(false)">Approve as-is</button>
+          <button class="btn-primary" onclick="submitDraft(true)">
+            Save changes &amp; continue
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Checkpoint 6/7: Doc Reviewer Critique ── -->
+      <div id="panel-review-feedback" class="checkpoint-panel hidden">
+        <div class="checkpoint-header">
+          <span class="checkpoint-badge">Review 6 of 7</span>
+          <h2>Doc Reviewer Critique</h2>
+          <p>The AI reviewer has critiqued the draft. Add any additional guidance before the editor polishes the document.</p>
+        </div>
+        <div id="review-feedback-nav" class="checkpoint-nav"></div>
+        <pre id="review-feedback-output" class="output-readonly"></pre>
+        <div class="refine-divider"><span>Refine with AI</span></div>
+        <div class="chat-log" id="review_feedback-chat-log"></div>
+        <div class="chat-input-row">
+          <textarea id="review_feedback-chat-input" class="chat-input" rows="3" placeholder="Ask for a change… e.g. 'focus more on the performance gaps'&#10;(Enter to send, Shift+Enter for new line)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendRefinement('review_feedback')}"></textarea>
+          <button class="chat-send" onclick="sendRefinement('review_feedback')"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 8L2 2l3 6-3 6 12-6z" fill="currentColor"/></svg> Send</button>
+        </div>
+        <label class="feedback-label" for="review-feedback-note">Additional notes for the editor (optional)</label>
+        <textarea id="review-feedback-note" class="feedback-textarea" rows="3" placeholder="e.g. Make sure the executive summary is no longer than one paragraph…"></textarea>
+        <div id="review-feedback-submit-actions" class="checkpoint-actions">
+          <button class="btn-ghost" onclick="submitReviewFeedback()">Continue without notes</button>
+          <button class="btn-primary" onclick="submitReviewFeedback()">
+            Save notes &amp; continue
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Checkpoint 7/7: Final Document ── -->
+      <div id="panel-final" class="checkpoint-panel hidden">
+        <div class="checkpoint-header">
+          <span class="checkpoint-badge">Review 7 of 7</span>
+          <h2>Final Document</h2>
+          <p>The editor has produced the final solution design document. Make any last edits before saving.</p>
+        </div>
+        <div id="final-nav" class="checkpoint-nav"></div>
+        <textarea id="final-text" class="review-textarea" rows="18"></textarea>
+        <div class="refine-divider"><span>Refine with AI</span></div>
+        <div class="chat-log" id="final-chat-log"></div>
+        <div class="chat-input-row">
+          <textarea id="final-chat-input" class="chat-input" rows="3" placeholder="Ask for a change… e.g. 'add a conclusion section'&#10;(Enter to send, Shift+Enter for new line)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendRefinement('final')}"></textarea>
+          <button class="chat-send" onclick="sendRefinement('final')"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 8L2 2l3 6-3 6 12-6z" fill="currentColor"/></svg> Send</button>
+        </div>
+        <div id="final-submit-actions" class="checkpoint-actions">
+          <button class="btn-ghost" onclick="submitFinal(false)">Accept as-is</button>
+          <button class="btn-primary" onclick="submitFinal(true)">
+            Save changes &amp; finish
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
         </div>

@@ -45,3 +45,6 @@ class ArchitectureState(BaseModel):
     # Human-in-the-loop fields (populated only when --interactive is used)
     human_brief_feedback: Optional[str] = None
     human_selected_approach: Optional[str] = None
+    human_architect_feedback: Optional[str] = None
+    human_risk_feedback: Optional[str] = None
+    human_review_note: Optional[str] = None
